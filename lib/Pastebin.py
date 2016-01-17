@@ -33,10 +33,22 @@ class Pastebin(Site):
     def update(self):
         '''update(self) - Fill Queue with new Pastebin IDs'''
         new_pastes = []
-        #if not self.ref_id:
-        self.log.info('Retrieving ID\'s')
-        results = BeautifulSoup(self.session.get(self.BASE_URL).text).find_all(lambda tag: tag.name == 'li' and tag.a)        
-        #results += BeautifulSoup(self.session.get(self.BASE_URL + '/archive').text).find_all(lambda tag: tag.name == 'td' and tag.a and '/archive/' not in tag.a['href'] and tag.a['href'][1:])
+        self.log.info('[*] Retrieving ID\'s')
+        raw = None
+        while not raw:
+            try:
+                raw = self.session.get(self.BASE_URL + '/archive').text
+            except:
+                self.log.critical('Error acquiring HTML.  Trying again...')
+                raw = None
+                sleep(5)
+        
+        results = None
+        results = BeautifulSoup(raw).find_all(lambda tag: tag.name == 'td' and tag.a and '/archive/' not in tag.a['href'] and tag.a['href'][1:])
+        if len(results) == 0:
+            self.log.error('archive failure, working from recent list...')
+            results = BeautifulSoup(raw).find_all(lambda tag: tag.name == 'li' and tag.a)        
+        
         if not self.ref_id:
             results = results[:60]
         for entry in results:

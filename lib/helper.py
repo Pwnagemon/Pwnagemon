@@ -1,23 +1,41 @@
 '''
 helper.py - provides misc. helper functions
-Author: Jordan
 
 '''
 
+import smtplib
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEText import MIMEText
 import requests
 from time import sleep
 import logging
 import threading
 from .Paste import DumpType
+from settings import SMTP_SERVER, SMTP_PORT, SMTP_USER, SMTP_PASS
 
 r = requests.Session()
-
+ 
 def createThread(target, *args):
     t = threading.Thread(target=target, args=args)         
     t.daemon = True
     t.start()
     return t
              
+def alert_email(to, body):
+    logging.critical('sending alert mail to {0}'.format(to))
+    
+    msg = MIMEMultipart()
+    msg['From'] = SMTP_USER
+    msg['To'] = to
+    msg['Subject'] = "Pwnagemon Alert!"
+    msg.attach(MIMEText(body, 'plain'))
+
+    mail = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+    mail.ehlo()
+    mail.starttls()
+    mail.login(SMTP_USER, SMTP_PASS)
+    mail.sendmail(SMTP_USER, to, msg.as_string())
+    mail.quit()
 
 def download(url, headers=None):
     if not headers:

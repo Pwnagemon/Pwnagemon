@@ -2,6 +2,7 @@ from .regexes import regexes
 from settings import EMAIL_THRESHOLD, HASH_THRESHOLD, DB_KEYWORDS_THRESHOLD 
 import re
 from enum import IntEnum
+import helper
 
 class DumpType(IntEnum):
     NONE = 0
@@ -20,9 +21,11 @@ class Paste(object):
 
         '''
         self.emails = 0
+        self.critical_emails = 0
         self.hashes = 0
         self.passwords = 0
         self.num_emails = 0
+        self.num_critical_emails = 0
         self.num_hashes = 0
         self.num_passwords = 0
         self.text = None
@@ -49,12 +52,23 @@ class Paste(object):
         self.emails = list(set(regexes['email'].findall(self.text)))
         self.passwords = list(set(regexes['email_pass'].findall(self.text)))
         self.hashes = regexes['hash32'].findall(self.text)
+        
         self.num_emails = len(self.emails)
         self.num_passwords = len(self.passwords)
         self.num_hashes = len(self.hashes)
         if self.num_emails > 0:
             self.sites = list(set([re.search('@(.*)$', email).group(1).lower() for email in self.emails]))
         
+        display = ""
+        i = 0
+        for regex in regexes['critical_keywords']:
+            display += '-'
+            if regex.search(self.text):
+                display = display[:-1] + '0'
+                self.log.critical('sending email of {0} to {1}'.format(regexes['critical_alert_emails'][i], self.tweet_url))
+                helper.alert_email(regexes['critical_alert_emails'][i], self.tweet_url)
+                i += 1
+        self.log.critical('[{0}] critical keywords'.format(display))
         display = ""
         for regex in regexes['db_keywords']:
             display += "-"

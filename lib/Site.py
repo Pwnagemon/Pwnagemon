@@ -67,8 +67,15 @@ class Site(object):
         print('\n'.join(url for url in self.queue))
 
     def monitor(self, bot, t_lock):
-        self.update()
-        while(1):
+        
+        while(True):
+            
+            self.update()
+            if self.empty():
+                self.log.debug('[*] No results, sleeping for {0} seconds.'.format(self.sleep))
+                time.sleep(self.sleep)
+                continue
+                
             while not self.empty():
                 paste = self.get()
                 self.ref_id = paste.id
@@ -97,8 +104,3 @@ class Site(object):
                             bot.statuses.update(status=tweet)
                         except TwitterError as e:
                             self.log.critical('[!] Twitter failure {0}'.format(e))
-            self.update()
-            while self.empty():
-                self.log.debug('[*] No results, sleeping for {0} seconds.'.format(self.sleep)) 
-                time.sleep(self.sleep)
-                self.update()
