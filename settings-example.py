@@ -3,6 +3,10 @@
 USE_DB = True
 DB_HOST = 'localhost'
 DB_PORT = 27017
+SMTP_SERVER = '[mail server host name]'
+SMTP_PORT = [relay_port]
+SMTP_USER = '[email address]'
+SMTP_PASS = '[pass]'
 
 # Twitter Settings
 CONSUMER_KEY = '[hash]'
